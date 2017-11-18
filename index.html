@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>识字游戏</title>
+	<style type="text/css">
+		*{
+			margin: 0;
+			padding: 0;
+			font-size: 14px;
+			font-family: microsoft yahei
+		}
+		.title{
+			margin-left: 1rem;
+			height: 50px;
+			line-height: 50px;
+			font-size: 1.2rem;
+			color: red;
+		}
+		.title>small{
+			font-size: 1rem;
+			font-weight: normal;
+			color: #555;
+		}
+		.content-wrap{
+			width: 800px;
+			border: 1px solid #ccc;
+			padding: 12px
+		}
+		.options-wrap{
+			display: flex;
+			justify-content: space-between;
+			width: 100%;
+		}
+		.options-wrap .option-item{
+			width: 100px;
+			height: 100px;
+			background-color:rgba(0,0,0,0.2);
+			text-align: center;
+			line-height: 100px;
+			font-size: 2.8rem;
+			color: #333;
+			font-weight: bold;
+			border-radius: 5px;
+			cursor: move;
+			user-select: none;
+		}
+		.answer-wrap{
+			width: 100%;
+			margin: 15px 0;
+			display: flex;
+		}
+		.answer-wrap .answer-item:first-child{
+			margin-left: 0
+		}
+		.answer-wrap .answer-item{
+			width: 150px;
+			height: 150px;
+			border: 1px solid #ccc;
+			margin-left: 50px;
+		}
+		.answer-wrap .answer-item>h3{
+			font-size: 1.5rem;
+			font-weight: bold;
+			color: #555;
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<h2 class="title">识字游戏<small>把汉字拖到对应拼音的框里去</small></h2>
+	<section class="content-wrap">
+		<div class="options-wrap">
+			<div data-drag-for="tian" class="option-item">田</div>
+			<div data-drag-for="ri" class="option-item">日</div>
+			<div data-drag-for="mu" class="option-item">目</div>
+			<div data-drag-for="kou" class="option-item">口</div>	
+		</div>
+		<div class="answer-wrap">
+			<div class="answer-item" id="tian">
+				<h3>tian</h3>
+				<div></div>
+			</div>
+			<div class="answer-item" id="ri">
+				<h3>ri</h3>
+				<div></div>
+			</div>
+			<div class="answer-item" id="mu">
+				<h3>mu</h3>
+				<div></div>
+			</div>
+			<div class="answer-item" id="kou">
+				<h3>kou</h3>
+				<div></div>
+			</div>
+		</div>
+	</section>
+
+	
+
+	<script type="text/javascript">
+		var nodes = document.querySelectorAll("[data-drag-for]");
+		var optionsWrap = document.querySelector(".options-wrap");
+
+		var lyin = {
+			// 移动
+			move:function(node,x,y){
+				// this.nextAll(node);
+				// console.log("---",this.nodes)
+				// this.flowAnim(this.nodes,1);
+				// 绝对定位移动法
+				var nodeWidth = node.clientWidth;
+				var nodeHeight = node.clientHeight;
+				node.style.position = "absolute";
+				node.style.left = x - nodeWidth/2 + "px";
+				node.style.top = y - nodeHeight/2 + "px";
+
+			},
+			move2:function(node,x,y){
+				//相对定位移动法
+				// var originCoordinate = [];	//初始坐标
+				// if(originCoordinate.length <= 0){
+				// 	console.log(node.getAttribute("data-coor"))
+				// }
+			},
+			// 拖动
+			drag:function(node){
+				var _this = this;
+				node.onmouseover = function(event){
+					_this.move(this,event.pageX,event.pageY)
+				}
+				node.onmousemove = function(event){
+					_this.move(this,event.pageX,event.pageY)
+				}
+			},
+			// 检验是否答对
+			check(node){
+				// 目标信息
+				var nodeX = node.offsetLeft;	//目标X轴位置
+				var nodeY = node.offsetTop;		//目标Y轴位置
+				var nodeWidth = node.clientWidth;	//目标宽高
+				var nodeHeight = node.clientHeight;
+				//顶点对角线坐标
+				var nodeAngleX = nodeX + nodeWidth;
+				var nodeAngleY = nodeY + nodeHeight; 
+
+				var nodeFor = node.getAttribute("data-drag-for");	//目标属于谁的 节点ID
+				var targetDom = document.getElementById(nodeFor);	//找到目标相关节点
+				//判断目标节点是否存在
+				if(!targetDom){
+					return false;
+				}
+				var targetX = targetDom.offsetLeft;
+				var targetY = targetDom.offsetTop;
+				var targetWidth = targetDom.clientWidth;
+				var targetHeight = targetDom.clientHeight;
+				// 顶点对角线坐标
+				var targetAngleX = targetX + targetWidth;
+				var targetAngleY = targetY + targetHeight;
+
+				var flag = false;
+
+				if(nodeX >= targetX && nodeY >= targetY && nodeAngleX <= targetAngleX && nodeAngleY <= targetAngleY){
+					flag = true;
+					node.style.backgroundColor = "green";
+					node.style.color = "#fff";
+					console.log("正确");
+				}else{
+					flag = false;
+					console.log("错误");
+				}
+
+				return flag;
+			},
+			//找到某个节点后的下一个兄弟节点
+			next(startDom){
+				return startDom.nextElementSibling
+			},
+			//找到某个节点之后的所有兄弟节点
+			nodes:[],
+			nextAll(startDom){
+		
+				var node = this.next(startDom);
+				while(node){
+					this.nodes.push(node);
+					node = this.nextAll(node);
+				}
+				console.log("此节点后所有兄弟节点",this.nodes);
+				// return nodes;
+			},
+			// 流动动画
+			flowAnim(nodes,duration){
+				if(Array.isArray(nodes)){
+					nodes.forEach(function(val,key){
+						if(val.nodeType === 1)
+							console.log("i am hear");
+							// val.style.position = "absolute";
+							val.style.left = "0"
+							val.style.transition = "all "+duration+"s"
+					})
+				}
+				if(nodes.nodeType === 1)
+					nodes.style.transition = "left "+duration+"s";
+			}
+		}
+
+		optionsWrap.style.height = optionsWrap.clientHeight +"px";
+
+		for(var i = 0,nodeLen = nodes.length;i<nodeLen;i++){
+
+			nodes[i].onmousedown = function(){
+				this.style.transition = "all 0s";
+				this.style.boxShadow = "3px 3px 4px 1px #aaa";
+				this.style.zIndex = "999";
+				lyin.drag(this)
+			};
+			
+			nodes[i].addEventListener("mouseup",function(){
+				this.style.boxShadow = "0px 0px 0px 0px #aaa"
+				this.style.zIndex = "0";
+				console.log("检验结果",lyin.check(this));
+
+				if(lyin.check(this)){
+					alert("恭喜你，答对了");
+					this.onmouseover = null;
+					this.onmousemove = null;
+				}else{
+					this.style.position = "relative";
+					this.style.transition = "all 1s";
+					this.style.left = "0";
+					this.style.top = "0";
+					this.onmouseover = null;
+					this.onmousemove = null;
+				}
+			})
+		
+		
+		}
+
+	</script>
+</body>
+</html>
